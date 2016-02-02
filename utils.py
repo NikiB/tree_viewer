@@ -126,3 +126,23 @@ def get_bootsrtap_size(bootstrap_sizes_file):
             bootstrap_dict[branch] = 0
 
     return bootstrap_dict
+
+
+def get_dup_labels(duplidate_file):
+    colors = load_json(duplidate_file)
+    duplidate_colors = colors['Duplictaes']
+    duplidate_dict_colors = dict()
+    for node in duplidate_colors.keys():
+        duplidate_dict_colors[node] = hex_to_rgb(duplidate_colors[node])
+
+    return duplidate_dict_colors
+
+
+def get_description(description_file):
+    description_markers = load_json(description_file)
+    description = description_markers['Description']
+    new_dict_description = dict()
+    for mark in description.keys():
+        new_dict_description[mark] = description[mark]
+
+    return new_dict_description

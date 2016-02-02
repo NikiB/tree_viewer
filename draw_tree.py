@@ -16,7 +16,8 @@ def tree_draw(tree_file,
               intermediate_node_sizes_file=None,
               intermediate_node_labels_file=None,
               leaf_labels_file=None,
-              legend_file=None
+              legend_file=None,
+              duplicate_file=None
               ):
 
     t = ete2.Tree(newick=tree_file, format=1)
@@ -135,6 +136,16 @@ def tree_draw(tree_file,
             name_face.margin_left = 3
             node.add_face(name_face, column=0)
 
+    if duplicate_file:
+        dup_labels = utils.get_dup_labels(duplicate_file)
+        for name, color in dup_labels.iteritems():
+            nodes = t.search_nodes(name=name)
+            assert len(nodes) == 1
+            node = nodes[0]
+            dup_face = ete2.faces.TextFace('*', fsize=10, fgcolor=color)
+            dup_face.margin_left = 5
+            node.add_face(dup_face, column=1)
+
     if legend_file:
         legend = utils.get_legend(legend_file)
         for mark in legend.keys():
@@ -170,6 +181,7 @@ if '__main__' == __name__:
     parser.add_argument('-l', '--nLabelFile', type=str, dest='intermediate_node_labels_file', default=None, help='path for intermediate node labels file')
     parser.add_argument('-L', '--leafFile', type=str, dest='leaf_labels_file', default=None, help='path for leaf labels file')
     parser.add_argument('-d', '--legendFile', type=str, dest='legend_file', default=None, help='path for legend file for the tree')
+    parser.add_argument('-d', '--duplicateFile', type=str, dest='duplicate_file', default=None, help='path for duplicates file for the tree')
 
 
     # tree_file = '/net/mraid11/export/data/dcsoft/home/LINEAGE/Hiseq/NSR5/fastq/Calling/Tree_Analysis/Ruby/NSR5_AC_X_mat_1a__0_01__30Ruby_transposed_NewNames_filtered_0_0_withRoot_distance_ABS_NJ_reordered_leafTab_fillNAN_1_distance_ABS_NJ_reordered.newick'
@@ -195,6 +207,7 @@ if '__main__' == __name__:
     intermediate_node_labels_file = args.intermediate_node_labels_file
     leaf_labels_file = args.leaf_labels_file
     legend_file = args.legend_file
+    duplicate_file = args.duplicate_file
 
     tree_draw(tree_file, tree_name, output_file,
               order_vector_file=order_vector_file,
@@ -204,6 +217,7 @@ if '__main__' == __name__:
               intermediate_node_sizes_file=intermediate_node_sizes_file,
               intermediate_node_labels_file=intermediate_node_labels_file,
               leaf_labels_file=leaf_labels_file,
-              legend_file=legend_file
+              legend_file=legend_file,
+              duplicate_file=duplicate_file
               )
 
