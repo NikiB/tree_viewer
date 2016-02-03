@@ -4,6 +4,7 @@ import argparse
 import ete2
 import math
 import utils
+import os
 
 
 def tree_draw(tree_file,
@@ -208,6 +209,9 @@ if '__main__' == __name__:
     leaf_labels_file = args.leaf_labels_file
     legend_file = args.legend_file
     duplicate_file = args.duplicate_file
+
+    # launch server X
+    os.environ["DISPLAY"] = ":2"
 
     tree_draw(tree_file, tree_name, output_file,
               order_vector_file=order_vector_file,

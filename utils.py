@@ -128,8 +128,8 @@ def get_bootsrtap_size(bootstrap_sizes_file):
     return bootstrap_dict
 
 
-def get_dup_labels(duplidate_file):
-    colors = load_json(duplidate_file)
+def get_dup_labels(duplicate_file):
+    colors = load_json(duplicate_file)
     duplidate_colors = colors['Duplictaes']
     duplidate_dict_colors = dict()
     for node in duplidate_colors.keys():
