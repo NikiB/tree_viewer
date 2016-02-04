@@ -5,6 +5,7 @@ import ete2
 import math
 import utils
 import os
+import sys
 
 
 def tree_draw(tree_file,
@@ -163,9 +164,9 @@ def tree_draw(tree_file,
 
     t.ladderize()
     #t.render("%%inline", tree_style=ts)
-    a = t.render(output_file, w=1000, dpi=900, tree_style=ts)
+    return t, ts
 
-if '__main__' == __name__:
+def main():
     parser = argparse.ArgumentParser(description='Draw a tree from JSon files with newick backbone')
     parser.add_argument('-i', '--input', type=str, dest='tree_file', help='newick tree file distanation')
     parser.add_argument('-o', '--output', type=str, dest='output_file', help='name for the tree (png file)')
@@ -207,9 +208,11 @@ if '__main__' == __name__:
     duplicate_file = args.duplicate_file
 
     # launch server X
+    reload(sys)
+    sys.setdefaultencoding("utf-8")
     os.environ["DISPLAY"] = ":2"
 
-    tree_draw(tree_file, tree_name, output_file,
+    tree, ts = tree_draw(tree_file, tree_name, output_file,
               order_vector_file=order_vector_file,
               cell_colors_file=cell_colors_file,
               clustering_colors_file=clustering_colors_file,
@@ -221,3 +224,6 @@ if '__main__' == __name__:
               duplicate_file=duplicate_file
               )
 
+    tree.render(output_file, w=1200, dpi=900, tree_style=ts)
+    #tree.show(tree_style=ts)
+    print 'Thank You'
