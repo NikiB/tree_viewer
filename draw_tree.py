@@ -34,7 +34,7 @@ def tree_draw(tree_file,
     for n in t.traverse():
         styles[n.name] = dict()
         styles[n.name]['style'] = ete2.NodeStyle()
-        styles[n.name]['style']['fgcolor'] = 'FFFFFF'
+        styles[n.name]['style']['fgcolor'] = '#FFFFFF'
         if n.dist > 0:
             n.dist = -math.log10(n.dist)*10
 
@@ -46,7 +46,7 @@ def tree_draw(tree_file,
         bootsrtap_sizes = utils.get_bootsrtap_size(intermediate_node_sizes_file)
         for branch, size in bootsrtap_sizes.iteritems():
             styles[branch]['style']["size"] = size
-            styles[branch]['style']['fgcolor'] = 'FFFFFF'
+            styles[branch]['style']['fgcolor'] = '#FFFFFF'
 
     # add colors to the leafs
     if cell_colors_file:
@@ -70,6 +70,25 @@ def tree_draw(tree_file,
                     if leaf_order[a.name] > leaf_order[b.name]:
                         left, right = n.children
                         n.children = [right,left]
+
+    # add width to branches
+    if clustering_sizes_file:
+        branch_width = utils.get_branch_width(clustering_sizes_file)
+        for name, groups in branch_width.iteritems():
+            nodes = t.search_nodes(name=name)
+            assert len(nodes) == 1
+            node = nodes[0]
+            for group, pvalue in groups.iteritems():
+                width = min(10,-round(math.log10(pvalue)))
+                children = node.get_children()
+                for child in children:
+                    if group not in styles[child.name]:
+                        styles[child.name][group] = dict()
+                    styles[child.name][group]["hz_line_width"] = width
+                if group not in styles[name]:
+                    styles[name][group] = dict()
+                styles[name][group]["vt_line_width"] = width
+                styles[name]['style']["vt_line_width"] = width
 
     # add colors to branches
     if clustering_colors_file:
@@ -97,29 +116,6 @@ def tree_draw(tree_file,
                     styles[name][group] = dict()
                 styles[name][group]["vt_line_color"] = color
                 styles[name]['style']["vt_line_color"] = color
-
-    # add width to branches
-    if clustering_sizes_file:
-        branch_width = utils.get_branch_width(clustering_sizes_file)
-        for name, groups in branch_width.iteritems():
-            nodes = t.search_nodes(name=name)
-            assert len(nodes) == 1
-            node = nodes[0]
-            for group, pvalue in groups.iteritems():
-                width = min(10,-round(math.log10(pvalue)))
-                children = node.get_children()
-                for child in children:
-                    if group not in styles[child.name]:
-                        styles[child.name][group] = dict()
-                    styles[child.name][group]["hz_line_width"] = width
-                if group not in styles[name]:
-                    styles[name][group] = dict()
-                styles[name][group]["vt_line_width"] = width
-                styles[name]['style']["vt_line_width"] = width
-
-    # add
-    if intermediate_node_labels_file:
-        pass
 
     # add new leaf labels
     if leaf_labels_file:
@@ -162,12 +158,12 @@ def tree_draw(tree_file,
         n.set_style(styles[n.name]['style'])
     root = ete2.faces.CircleFace(2, 'white')
     root.border.width = 1
-    root.border.color = 'FFFFFF'
+    root.border.color = '#FFFFFF'
     t.add_face(root, column=0, position='float')
 
     t.ladderize()
     #t.render("%%inline", tree_style=ts)
-    t.render(output_file, w=1000, dpi=900, tree_style=ts)
+    a = t.render(output_file, w=1000, dpi=900, tree_style=ts)
 
 if '__main__' == __name__:
     parser = argparse.ArgumentParser(description='Draw a tree from JSon files with newick backbone')
@@ -203,7 +199,7 @@ if '__main__' == __name__:
     order_vector_file = args.order_vector_file
     cell_colors_file = args.cell_colors_file
     clustering_colors_file = args.clustering_colors_file
-    clustering_sizes_file = args.clustering_sizes_file,
+    clustering_sizes_file = args.clustering_sizes_file
     intermediate_node_sizes_file = args.intermediate_node_sizes_file
     intermediate_node_labels_file = args.intermediate_node_labels_file
     leaf_labels_file = args.leaf_labels_file
