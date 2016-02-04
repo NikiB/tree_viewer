@@ -168,9 +168,9 @@ def tree_draw(tree_file,
 
 def main():
     parser = argparse.ArgumentParser(description='Draw a tree from JSon files with newick backbone')
-    parser.add_argument('-i', '--input', type=str, dest='tree_file', help='newick tree file distanation')
-    parser.add_argument('-o', '--output', type=str, dest='output_file', help='name for the tree (png file)')
-    parser.add_argument('-n', '--name', type=str, dest='tree_name', help='name for the tree - Title')
+    parser.add_argument('-i', '--input', type=str, dest='tree_file', required=True, help='newick tree file distanation')
+    parser.add_argument('-o', '--output', type=str, dest='output_file', required=True, help='name for the tree (png file)')
+    parser.add_argument('-n', '--name', type=str, dest='tree_name', required=True, help='name for the tree - Title')
     parser.add_argument('-v', '--vectorFile', type=str, dest='order_vector_file', default=None, help='path for order vector file')
     parser.add_argument('-c', '--colorFile', type=str, dest='cell_colors_file', default=None, help='path for cell colors file')
     parser.add_argument('-C', '--clusteringFile', type=str, dest='clustering_colors_file', default=None, help='path for clustering colors file')
