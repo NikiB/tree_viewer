@@ -162,7 +162,7 @@ def tree_draw(tree_file,
     root.border.color = '#FFFFFF'
     t.add_face(root, column=0, position='float')
 
-    t.ladderize()
+    #t.ladderize()
     #t.render("%%inline", tree_style=ts)
     return t, ts
 
