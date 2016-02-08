@@ -1,0 +1,3 @@
+[console_scripts]
+draw_tree = tree_viewer.draw_tree:main
+

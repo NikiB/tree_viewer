@@ -9,8 +9,8 @@ import sys
 
 
 def tree_draw(tree_file,
+              tree_name,
               output_file,
-              tree_name=None,
               order_vector_file=None,
               cell_colors_file=None,
               clustering_colors_file=None,
@@ -19,8 +19,7 @@ def tree_draw(tree_file,
               intermediate_node_labels_file=None,
               leaf_labels_file=None,
               legend_file=None,
-              duplicate_file=None,
-              tree_scale='linear'
+              duplicate_file=None
               ):
 
     t = ete2.Tree(newick=tree_file, format=1)
@@ -30,19 +29,15 @@ def tree_draw(tree_file,
     ts.show_leaf_name = True
     ts.show_scale = False
     ts.scale = 1
-    if tree_name:
-        ts.title.add_face(ete2.TextFace(tree_name, fsize=20), column=0)
+    ts.title.add_face(ete2.TextFace(tree_name, fsize=20), column=0)
 
     styles = {}
     for n in t.traverse():
         styles[n.name] = dict()
         styles[n.name]['style'] = ete2.NodeStyle()
         styles[n.name]['style']['fgcolor'] = 'black'
-        if tree_scale == 'log':
-            if n.dist > 0:
-                n.dist = -math.log10(n.dist)*10
-        elif tree_scale == 'linear':
-            n.dist = n.dist*200
+        if n.dist > 0:
+            n.dist = -math.log10(n.dist)*10
 
         if not n.is_leaf():
             styles[n.name]['style']["size"] = 0
@@ -159,8 +154,7 @@ def tree_draw(tree_file,
         ts.legend_position = 4
 
     for n in t.traverse():
-        if n.name == 'Root':
-            n.dist = 0
+        if n.name == 'L_root':
             n.delete()
         n.set_style(styles[n.name]['style'])
     root = ete2.faces.CircleFace(2, 'white')
@@ -176,7 +170,7 @@ def main():
     parser = argparse.ArgumentParser(description='Draw a tree from JSon files with newick backbone')
     parser.add_argument('-i', '--input', type=str, dest='tree_file', required=True, help='newick tree file distanation')
     parser.add_argument('-o', '--output', type=str, dest='output_file', required=True, help='name for the tree (png file)')
-    parser.add_argument('-n', '--name', type=str, dest='tree_name', default=None, help='name for the tree - Title')
+    parser.add_argument('-n', '--name', type=str, dest='tree_name', required=True, help='name for the tree - Title')
     parser.add_argument('-v', '--vectorFile', type=str, dest='order_vector_file', default=None, help='path for order vector file')
     parser.add_argument('-c', '--colorFile', type=str, dest='cell_colors_file', default=None, help='path for cell colors file')
     parser.add_argument('-C', '--clusteringFile', type=str, dest='clustering_colors_file', default=None, help='path for clustering colors file')
@@ -186,7 +180,6 @@ def main():
     parser.add_argument('-L', '--leafFile', type=str, dest='leaf_labels_file', default=None, help='path for leaf labels file')
     parser.add_argument('-D', '--legendFile', type=str, dest='legend_file', default=None, help='path for legend file for the tree')
     parser.add_argument('-d', '--duplicateFile', type=str, dest='duplicate_file', default=None, help='path for duplicates file for the tree')
-    parser.add_argument('-S', '--scale', type=str, dest='tree_scale', default='linear', help='choose the scale for the tree linear/log (default=linear)')
 
 
     # tree_file = '/net/mraid11/export/data/dcsoft/home/LINEAGE/Hiseq/NSR5/fastq/Calling/Tree_Analysis/Ruby/NSR5_AC_X_mat_1a__0_01__30Ruby_transposed_NewNames_filtered_0_0_withRoot_distance_ABS_NJ_reordered_leafTab_fillNAN_1_distance_ABS_NJ_reordered.newick'
@@ -213,13 +206,13 @@ def main():
     leaf_labels_file = args.leaf_labels_file
     legend_file = args.legend_file
     duplicate_file = args.duplicate_file
-    tree_scale = args.tree_scale
+
     # launch server X
     reload(sys)
     sys.setdefaultencoding("utf-8")
     os.environ["DISPLAY"] = ":2"
 
-    tree, ts = tree_draw(tree_file, output_file, tree_name=tree_name,
+    tree, ts = tree_draw(tree_file, tree_name, output_file,
               order_vector_file=order_vector_file,
               cell_colors_file=cell_colors_file,
               clustering_colors_file=clustering_colors_file,
@@ -228,12 +221,9 @@ def main():
               intermediate_node_labels_file=intermediate_node_labels_file,
               leaf_labels_file=leaf_labels_file,
               legend_file=legend_file,
-              duplicate_file=duplicate_file,
-              tree_scale=tree_scale
+              duplicate_file=duplicate_file
               )
+
     tree.render(output_file, w=1200, dpi=900, tree_style=ts)
     #tree.show(tree_style=ts)
     print 'Thank You'
-
-if __name__ == "__main__":
-    main()
