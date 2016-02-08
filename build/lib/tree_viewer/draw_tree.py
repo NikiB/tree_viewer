@@ -39,8 +39,11 @@ def tree_draw(tree_file,
         styles[n.name]['style'] = ete2.NodeStyle()
         styles[n.name]['style']['fgcolor'] = 'black'
         if tree_scale == 'log':
-            if n.dist > 0:
-                n.dist = -math.log10(n.dist)*10
+            root = t.get_tree_root()
+            if not n == root:
+                dist = n.get_distance(root)
+                if dist >0:
+                    styles[n.name]['dist'] = -math.log10(1-dist)*40
         elif tree_scale == 'linear':
             n.dist = n.dist*200
 
@@ -159,10 +162,15 @@ def tree_draw(tree_file,
         ts.legend_position = 4
 
     for n in t.traverse():
-        if n.name == 'Root':
+        if n.name == 'IDroot':
+            n.dist = 0
+            n.delete()
+        if n.is_root():
             n.dist = 0
             n.delete()
         n.set_style(styles[n.name]['style'])
+        if 'dist' in styles[n.name]:
+            n.dist = styles[n.name]['dist']
     root = ete2.faces.CircleFace(2, 'white')
     root.border.width = 1
     root.border.color = 'black'
@@ -231,6 +239,11 @@ def main():
               duplicate_file=duplicate_file,
               tree_scale=tree_scale
               )
+
+    tree.render(output_file, w=1200, dpi=900, tree_style=ts)
+    tree.ladderize()
+    output_file = output_file.split('.')[0]
+    output_file = output_file + 'ladderize.png'
     tree.render(output_file, w=1200, dpi=900, tree_style=ts)
     #tree.show(tree_style=ts)
     print 'Thank You'
