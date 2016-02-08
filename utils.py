@@ -9,6 +9,8 @@ def load_json(file):
 
 
 def to_hex(n):
+    if n == 0:
+        return '00'
     return hex(int(n*255))[2:].upper()
 
 
