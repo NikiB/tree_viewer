@@ -35,7 +35,7 @@ def tree_draw(tree_file,
     for n in t.traverse():
         styles[n.name] = dict()
         styles[n.name]['style'] = ete2.NodeStyle()
-        styles[n.name]['style']['fgcolor'] = '#FFFFFF'
+        styles[n.name]['style']['fgcolor'] = 'black'
         if n.dist > 0:
             n.dist = -math.log10(n.dist)*10
 
@@ -47,7 +47,7 @@ def tree_draw(tree_file,
         bootsrtap_sizes = utils.get_bootsrtap_size(intermediate_node_sizes_file)
         for branch, size in bootsrtap_sizes.iteritems():
             styles[branch]['style']["size"] = size
-            styles[branch]['style']['fgcolor'] = '#FFFFFF'
+            styles[branch]['style']['fgcolor'] = 'black'
 
     # add colors to the leafs
     if cell_colors_file:
@@ -159,7 +159,7 @@ def tree_draw(tree_file,
         n.set_style(styles[n.name]['style'])
     root = ete2.faces.CircleFace(2, 'white')
     root.border.width = 1
-    root.border.color = '#FFFFFF'
+    root.border.color = 'black'
     t.add_face(root, column=0, position='float')
 
     #t.ladderize()
