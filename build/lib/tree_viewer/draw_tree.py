@@ -34,18 +34,25 @@ def tree_draw(tree_file,
         ts.title.add_face(ete2.TextFace(tree_name, fsize=20), column=0)
 
     styles = {}
+    max_dist = 0
     for n in t.traverse():
         styles[n.name] = dict()
         styles[n.name]['style'] = ete2.NodeStyle()
         styles[n.name]['style']['fgcolor'] = 'black'
+        max_dist = max(max_dist,n.dist)
+    for n in t.traverse():
         if tree_scale == 'log':
             root = t.get_tree_root()
             if not n == root:
                 dist = n.get_distance(root)
                 if dist >0:
                     styles[n.name]['dist'] = -math.log10(1-dist)*40
+                    print n.name, dist, -math.log10(1-dist)*40
         elif tree_scale == 'linear':
-            n.dist = n.dist*200
+            if max_dist > 1:
+                n.dist = n.dist/max_dist*200
+            else:
+                n.dist = n.dist*200
 
         if not n.is_leaf():
             styles[n.name]['style']["size"] = 0
