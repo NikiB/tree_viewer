@@ -24,9 +24,8 @@ def tree_draw(tree_file,
               ):
 
     t = ete2.Tree(newick=tree_file, format=1)
-
     ts = ete2.TreeStyle()
-    ts.rotation = 90
+    #ts.rotation = 90
     ts.show_leaf_name = True
     ts.show_scale = False
     ts.scale = 1
@@ -40,20 +39,24 @@ def tree_draw(tree_file,
         styles[n.name]['style'] = ete2.NodeStyle()
         styles[n.name]['style']['fgcolor'] = 'black'
         max_dist = max(max_dist,n.dist)
+        
     for n in t.traverse():
         if tree_scale == 'log':
             root = t.get_tree_root()
             if not n == root:
                 dist = n.get_distance(root)
                 if dist >0:
-                    styles[n.name]['dist'] = -math.log10(1-dist)*40
-                    print n.name, dist, -math.log10(1-dist)*40
+                    styles[n.name]['dist'] = -math.log10(dist)*40
+                    print n.name, dist, -math.log10(dist)
         elif tree_scale == 'linear':
             if max_dist > 1:
-                n.dist = n.dist/max_dist*200
+                n.dist = round(n.dist/max_dist*200)
             else:
-                n.dist = n.dist*200
+                n.dist = round(n.dist*200)
 
+    for n in t.traverse():
+        if 'dist' in styles[n.name]:
+            n.dist = styles[n.name]['dist']
         if not n.is_leaf():
             styles[n.name]['style']["size"] = 0
 
@@ -120,12 +123,18 @@ def tree_draw(tree_file,
                         styles[child.name][group] = dict()
                     styles[child.name][group]["hz_line_color"] = color
 
+                    if 'vt_line_width' in styles[child.name][group]:
+                        line_width = child.dist*ts.scale-styles[child.name][group]["vt_line_width"]-0.5
+                    else:
+                        line_width = child.dist*ts.scale
+                    if 'vt_line_width' in styles[node.name][group]:
+                        line_width = line_width +styles[node.name][group]["vt_line_width"]
+                    
                     rf = ete2.faces.RectFace(height=styles[child.name][group]["hz_line_width"],
-                                             width=child.dist*ts.scale+styles[child.name][group]["hz_line_width"]-0.5,
+                                             width=line_width,
                                              fgcolor=color,
                                              bgcolor=color)
                     child.add_face(rf,0,position='float')
-    #                 styles[child.name][group]["hz_line_width"] = 0
                     styles[child.name]['style']["hz_line_width"] = 0
                 styles[name][group]["hz_line_color"] = color
                 if not group in styles[name]:
@@ -176,14 +185,11 @@ def tree_draw(tree_file,
             n.dist = 0
             n.delete()
         n.set_style(styles[n.name]['style'])
-        if 'dist' in styles[n.name]:
-            n.dist = styles[n.name]['dist']
     root = ete2.faces.CircleFace(2, 'white')
     root.border.width = 1
     root.border.color = 'black'
     t.add_face(root, column=0, position='float')
 
-    #t.ladderize()
     #t.render("%%inline", tree_style=ts)
     return t, ts
 
@@ -250,7 +256,7 @@ def main():
     tree.render(output_file, w=1200, dpi=900, tree_style=ts)
     tree.ladderize()
     output_file = output_file.split('.')[0]
-    output_file = output_file + 'ladderize.png'
+    output_file = output_file + '_ladderize.png'
     tree.render(output_file, w=1200, dpi=900, tree_style=ts)
     #tree.show(tree_style=ts)
     print 'Thank You'

@@ -25,7 +25,7 @@ def tree_draw(tree_file,
 
     t = ete2.Tree(newick=tree_file, format=1)
     ts = ete2.TreeStyle()
-    #ts.rotation = 90
+    ts.rotation = 90
     ts.show_leaf_name = True
     ts.show_scale = False
     ts.scale = 1
