@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='DrawTreesETE',
-    version='0.1.7',
+    version='0.1.8',
     author='Veronika Berman',
     author_email='nika.berman@gmail.com',
     packages = find_packages(),  # include all packages under src

@@ -20,12 +20,14 @@ def tree_draw(tree_file,
               leaf_labels_file=None,
               legend_file=None,
               duplicate_file=None,
-              tree_scale='linear'
+              tree_scale='linear',
+              tree_rotation=True
               ):
 
     t = ete2.Tree(newick=tree_file, format=1)
     ts = ete2.TreeStyle()
-    ts.rotation = 90
+    if tree_rotation:
+        ts.rotation = 90
     ts.show_leaf_name = True
     ts.show_scale = False
     ts.scale = 1
@@ -208,6 +210,11 @@ def main():
     parser.add_argument('-D', '--legendFile', type=str, dest='legend_file', default=None, help='path for legend file for the tree')
     parser.add_argument('-d', '--duplicateFile', type=str, dest='duplicate_file', default=None, help='path for duplicates file for the tree')
     parser.add_argument('-S', '--scale', type=str, dest='tree_scale', default='linear', help='choose the scale for the tree linear/log (default=linear)')
+    parser.add_argument('-w', '--width', type=int, dest='fig_width', default=1200, help='width for the saved figure (default=1200)')
+    parser.add_argument('-h', '--height', type=int, dest='fig_height', default=600, help='height for the saved figure (default=600)')
+    parser.add_argument('-dp', '--dpi', type=int, dest='fig_dpi', default=900, help='DPI resolution for the figure (default=900)')
+    parser.add_argument('-r', '--rotation', type=bool, dest='tree_rotation', default=True, help='rotation of the figure (default=True)')
+
 
 
     # tree_file = '/net/mraid11/export/data/dcsoft/home/LINEAGE/Hiseq/NSR5/fastq/Calling/Tree_Analysis/Ruby/NSR5_AC_X_mat_1a__0_01__30Ruby_transposed_NewNames_filtered_0_0_withRoot_distance_ABS_NJ_reordered_leafTab_fillNAN_1_distance_ABS_NJ_reordered.newick'
@@ -235,6 +242,10 @@ def main():
     legend_file = args.legend_file
     duplicate_file = args.duplicate_file
     tree_scale = args.tree_scale
+    fig_width = args.fig_width
+    fig_height = args.fig_height
+    fig_dpi = args.fig_dpi
+    tree_rotation = args.tree_rotation
     # launch server X
     reload(sys)
     sys.setdefaultencoding("utf-8")
@@ -250,14 +261,15 @@ def main():
               leaf_labels_file=leaf_labels_file,
               legend_file=legend_file,
               duplicate_file=duplicate_file,
-              tree_scale=tree_scale
+              tree_scale=tree_scale,
+              tree_rotation=tree_rotation
               )
 
-    tree.render(output_file, w=1200, dpi=900, tree_style=ts)
+    tree.render(output_file, h=fig_height, w=fig_width, dpi=fig_dpi, tree_style=ts)
     tree.ladderize()
     output_file = output_file.split('.')[0]
     output_file = output_file + '_ladderize.png'
-    tree.render(output_file, w=1200, dpi=900, tree_style=ts)
+    tree.render(output_file, h=fig_height, w=fig_width, dpi=fig_dpi, tree_style=ts)
     #tree.show(tree_style=ts)
     print 'Thank You'
 
