@@ -21,7 +21,10 @@ def tree_draw(tree_file,
               legend_file=None,
               duplicate_file=None,
               tree_scale='linear',
-              tree_rotation=True
+              tree_rotation=True,
+              font_size=7,
+              font_legend=7,
+              node_size=3
               ):
 
     t = ete2.Tree(newick=tree_file, format=1)
@@ -61,6 +64,8 @@ def tree_draw(tree_file,
             n.dist = styles[n.name]['dist']
         if not n.is_leaf():
             styles[n.name]['style']["size"] = 0
+        else:
+            styles[n.name]['style']["size"] = node_size
 
     # add bootstrap values to the branches (size of the node)
     if intermediate_node_sizes_file:
@@ -153,9 +158,9 @@ def tree_draw(tree_file,
             assert len(nodes) == 1
             node = nodes[0]
             if name in cells_colors:
-                name_face = ete2.faces.TextFace(cells_labels[name], fsize=7, fgcolor=cells_colors[name])
+                name_face = ete2.faces.TextFace(cells_labels[name], fsize=font_size, fgcolor=cells_colors[name])
             else:
-                name_face = ete2.faces.TextFace(cells_labels[name], fsize=7)
+                name_face = ete2.faces.TextFace(cells_labels[name], fsize=font_size)
 
             name_face.margin_left = 3
             node.add_face(name_face, column=0)
@@ -174,7 +179,7 @@ def tree_draw(tree_file,
         legend = utils.get_legend(legend_file)
         for mark in legend.keys():
             ts.legend.add_face(ete2.faces.CircleFace(2, legend[mark]), column=0)
-            legend_txt = ete2.faces.TextFace(mark, fsize=7)
+            legend_txt = ete2.faces.TextFace(mark, fsize=font_legend)
             legend_txt.margin_left = 5
             ts.legend.add_face(legend_txt, column=1)
         ts.legend_position = 4
@@ -214,7 +219,9 @@ def main():
     parser.add_argument('-he', '--height', type=int, dest='fig_height', default=None, help='height for the saved figure (default=None)')
     parser.add_argument('-dp', '--dpi', type=int, dest='fig_dpi', default=900, help='DPI resolution for the figure (default=900)')
     parser.add_argument('-r', '--rotation', type=bool, dest='tree_rotation', default=True, help='rotation of the figure (default=True)')
-
+    parser.add_argument('-f', '--fontsize', type=int, dest='font_size', default=7, help='font size for the labels (default=7)')
+    parser.add_argument('-fl', '--fontlegend', type=int, dest='font_legend', default=7, help='font size for the legend (default=7)')
+    parser.add_argument('-ns', '--nodesize', type=int, dest='node_size', default=3, help='sizes of the leaves (default=3)')
 
 
     # tree_file = '/net/mraid11/export/data/dcsoft/home/LINEAGE/Hiseq/NSR5/fastq/Calling/Tree_Analysis/Ruby/NSR5_AC_X_mat_1a__0_01__30Ruby_transposed_NewNames_filtered_0_0_withRoot_distance_ABS_NJ_reordered_leafTab_fillNAN_1_distance_ABS_NJ_reordered.newick'
@@ -245,7 +252,10 @@ def main():
     fig_width = args.fig_width
     fig_height = args.fig_height
     fig_dpi = args.fig_dpi
+    font_size = args.font_size
+    font_legend = args.font_legend
     tree_rotation = args.tree_rotation
+    node_size = args.node_size
     # launch server X
     reload(sys)
     sys.setdefaultencoding("utf-8")
@@ -262,13 +272,16 @@ def main():
               legend_file=legend_file,
               duplicate_file=duplicate_file,
               tree_scale=tree_scale,
-              tree_rotation=tree_rotation
+              tree_rotation=tree_rotation,
+              font_size=font_size,
+              font_legend=font_legend,
+              node_size=node_size
               )
 
     tree.render(output_file, h=fig_height, w=fig_width, dpi=fig_dpi, tree_style=ts)
     tree.ladderize()
-    output_file = output_file.split('.')[0]
-    output_file = output_file + '_ladderize.png'
+    output_file = output_file.split('.')
+    output_file = output_file[0] + '_ladderize.' + output_file[1]
     tree.render(output_file, h=fig_height, w=fig_width, dpi=fig_dpi, tree_style=ts)
     #tree.show(tree_style=ts)
     print 'Thank You'

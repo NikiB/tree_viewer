@@ -210,8 +210,8 @@ def main():
     parser.add_argument('-D', '--legendFile', type=str, dest='legend_file', default=None, help='path for legend file for the tree')
     parser.add_argument('-d', '--duplicateFile', type=str, dest='duplicate_file', default=None, help='path for duplicates file for the tree')
     parser.add_argument('-S', '--scale', type=str, dest='tree_scale', default='linear', help='choose the scale for the tree linear/log (default=linear)')
-    parser.add_argument('-w', '--width', type=int, dest='fig_width', default=1200, help='width for the saved figure (default=1200)')
-    parser.add_argument('-he', '--height', type=int, dest='fig_height', default=600, help='height for the saved figure (default=600)')
+    parser.add_argument('-w', '--width', type=int, dest='fig_width', default=None, help='width for the saved figure (default=None)')
+    parser.add_argument('-he', '--height', type=int, dest='fig_height', default=None, help='height for the saved figure (default=None)')
     parser.add_argument('-dp', '--dpi', type=int, dest='fig_dpi', default=900, help='DPI resolution for the figure (default=900)')
     parser.add_argument('-r', '--rotation', type=bool, dest='tree_rotation', default=True, help='rotation of the figure (default=True)')
 
