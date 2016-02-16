@@ -6,10 +6,10 @@ import math
 import utils
 import os
 import sys
+from cluster_nodes import size_clustering, color_clustering
 
 
 def tree_draw(tree_file,
-              output_file,
               tree_name=None,
               order_vector_file=None,
               cell_colors_file=None,
@@ -24,7 +24,8 @@ def tree_draw(tree_file,
               tree_rotation=True,
               font_size=7,
               font_legend=7,
-              node_size=3
+              node_size=3,
+              scale_rate=None
               ):
 
     t = ete2.Tree(newick=tree_file, format=1)
@@ -39,29 +40,44 @@ def tree_draw(tree_file,
 
     styles = {}
     max_dist = 0
+
+    # initialize all nodes and branches
     for n in t.traverse():
         styles[n.name] = dict()
         styles[n.name]['style'] = ete2.NodeStyle()
         styles[n.name]['style']['fgcolor'] = 'black'
-        max_dist = max(max_dist,n.dist)
-        
+        max_dist = max(max_dist, n.dist)
+
+    # calculate the scale for the tree (log, linear and right size)
+    if tree_scale == 'log':
+        max_dist = 0
     for n in t.traverse():
         if tree_scale == 'log':
             root = t.get_tree_root()
-            if not n == root:
-                dist = n.get_distance(root)
-                if dist >0:
-                    styles[n.name]['dist'] = -math.log10(dist)*40
-                    print n.name, dist, -math.log10(dist)
+            if n == root:
+                styles[n.name]['dist'] = 0
+            else:
+                father_path = 0
+                for ancestor in n.get_ancestors():
+                    father_path += styles[ancestor.name]['dist']
+
+                dist = math.log10(n.get_distance(root)+1)-father_path
+                styles[n.name]['dist'] = dist
+                max_dist = max(max_dist, dist)
+
         elif tree_scale == 'linear':
             if max_dist > 1:
-                n.dist = round(n.dist/max_dist*200)
+                styles[n.name]['dist'] = round(n.dist/max_dist)
             else:
-                n.dist = round(n.dist*200)
+                styles[n.name]['dist'] = n.dist
 
+    # leaf styles and update distance
+    if not scale_rate:
+
+        scale_rate = max(1000, round(1/max_dist))
     for n in t.traverse():
         if 'dist' in styles[n.name]:
-            n.dist = styles[n.name]['dist']
+            n.dist = styles[n.name]['dist']*scale_rate
         if not n.is_leaf():
             styles[n.name]['style']["size"] = 0
         else:
@@ -95,59 +111,15 @@ def tree_draw(tree_file,
                 if a.is_leaf() and b.is_leaf():
                     if leaf_order[a.name] > leaf_order[b.name]:
                         left, right = n.children
-                        n.children = [right,left]
+                        n.children = [right, left]
 
     # add width to branches
     if clustering_sizes_file:
-        branch_width = utils.get_branch_width(clustering_sizes_file)
-        for name, groups in branch_width.iteritems():
-            nodes = t.search_nodes(name=name)
-            assert len(nodes) == 1
-            node = nodes[0]
-            for group, pvalue in groups.iteritems():
-                width = min(10,-round(math.log10(pvalue)))
-                children = node.get_children()
-                for child in children:
-                    if group not in styles[child.name]:
-                        styles[child.name][group] = dict()
-                    styles[child.name][group]["hz_line_width"] = width
-                if group not in styles[name]:
-                    styles[name][group] = dict()
-                styles[name][group]["vt_line_width"] = width
-                styles[name]['style']["vt_line_width"] = width
+        t, styles = size_clustering(t, styles, clustering_sizes_file)
 
     # add colors to branches
     if clustering_colors_file:
-        cluster_colors = utils.get_cluster_colors(clustering_colors_file)
-        for name, groups in cluster_colors.iteritems():
-            nodes = t.search_nodes(name=name)
-            assert len(nodes) == 1
-            node = nodes[0]
-            for group, color in groups.iteritems():
-                children = node.get_children()
-                for child in children:
-                    if not group in styles[child.name]:
-                        styles[child.name][group] = dict()
-                    styles[child.name][group]["hz_line_color"] = color
-
-                    if 'vt_line_width' in styles[child.name][group]:
-                        line_width = child.dist*ts.scale-styles[child.name][group]["vt_line_width"]-0.5
-                    else:
-                        line_width = child.dist*ts.scale
-                    if 'vt_line_width' in styles[node.name][group]:
-                        line_width = line_width +styles[node.name][group]["vt_line_width"]
-                    
-                    rf = ete2.faces.RectFace(height=styles[child.name][group]["hz_line_width"],
-                                             width=line_width,
-                                             fgcolor=color,
-                                             bgcolor=color)
-                    child.add_face(rf,0,position='float')
-                    styles[child.name]['style']["hz_line_width"] = 0
-                styles[name][group]["hz_line_color"] = color
-                if not group in styles[name]:
-                    styles[name][group] = dict()
-                styles[name][group]["vt_line_color"] = color
-                styles[name]['style']["vt_line_color"] = color
+        t, ts, styles = color_clustering(t, ts, styles, clustering_colors_file)
 
     # add new leaf labels
     if leaf_labels_file:
@@ -165,6 +137,7 @@ def tree_draw(tree_file,
             name_face.margin_left = 3
             node.add_face(name_face, column=0)
 
+    # add duplicate tags to nodes
     if duplicate_file:
         dup_labels = utils.get_dup_labels(duplicate_file)
         for name, color in dup_labels.iteritems():
@@ -175,6 +148,7 @@ def tree_draw(tree_file,
             dup_face.margin_left = 5
             node.add_face(dup_face, column=1)
 
+    # add legend to the tree
     if legend_file:
         legend = utils.get_legend(legend_file)
         for mark in legend.keys():
@@ -184,6 +158,7 @@ def tree_draw(tree_file,
             ts.legend.add_face(legend_txt, column=1)
         ts.legend_position = 4
 
+    # set all the styles
     for n in t.traverse():
         if n.name == 'IDroot':
             n.dist = 0
@@ -199,6 +174,7 @@ def tree_draw(tree_file,
 
     #t.render("%%inline", tree_style=ts)
     return t, ts
+
 
 def main():
     parser = argparse.ArgumentParser(description='Draw a tree from JSon files with newick backbone')
@@ -222,6 +198,7 @@ def main():
     parser.add_argument('-f', '--fontsize', type=int, dest='font_size', default=7, help='font size for the labels (default=7)')
     parser.add_argument('-fl', '--fontlegend', type=int, dest='font_legend', default=7, help='font size for the legend (default=7)')
     parser.add_argument('-ns', '--nodesize', type=int, dest='node_size', default=3, help='sizes of the leaves (default=3)')
+    parser.add_argument('-sr', '--scalerate', type=int, dest='scale_rate', default=None, help='the Y-scale rate (default=None)')
 
 
     # tree_file = '/net/mraid11/export/data/dcsoft/home/LINEAGE/Hiseq/NSR5/fastq/Calling/Tree_Analysis/Ruby/NSR5_AC_X_mat_1a__0_01__30Ruby_transposed_NewNames_filtered_0_0_withRoot_distance_ABS_NJ_reordered_leafTab_fillNAN_1_distance_ABS_NJ_reordered.newick'
@@ -256,27 +233,29 @@ def main():
     font_legend = args.font_legend
     tree_rotation = args.tree_rotation
     node_size = args.node_size
+    scale_rate = args.scale_rate
     # launch server X
     reload(sys)
     sys.setdefaultencoding("utf-8")
     os.environ["DISPLAY"] = ":2"
 
-    tree, ts = tree_draw(tree_file, output_file, tree_name=tree_name,
-              order_vector_file=order_vector_file,
-              cell_colors_file=cell_colors_file,
-              clustering_colors_file=clustering_colors_file,
-              clustering_sizes_file=clustering_sizes_file,
-              intermediate_node_sizes_file=intermediate_node_sizes_file,
-              intermediate_node_labels_file=intermediate_node_labels_file,
-              leaf_labels_file=leaf_labels_file,
-              legend_file=legend_file,
-              duplicate_file=duplicate_file,
-              tree_scale=tree_scale,
-              tree_rotation=tree_rotation,
-              font_size=font_size,
-              font_legend=font_legend,
-              node_size=node_size
-              )
+    tree, ts = tree_draw(tree_file, tree_name=tree_name,
+                         order_vector_file=order_vector_file,
+                         cell_colors_file=cell_colors_file,
+                         clustering_colors_file=clustering_colors_file,
+                         clustering_sizes_file=clustering_sizes_file,
+                         intermediate_node_sizes_file=intermediate_node_sizes_file,
+                         intermediate_node_labels_file=intermediate_node_labels_file,
+                         leaf_labels_file=leaf_labels_file,
+                         legend_file=legend_file,
+                         duplicate_file=duplicate_file,
+                         tree_scale=tree_scale,
+                         tree_rotation=tree_rotation,
+                         font_size=font_size,
+                         font_legend=font_legend,
+                         node_size=node_size,
+                         scale_rate=scale_rate
+                         )
 
     tree.render(output_file, h=fig_height, w=fig_width, dpi=fig_dpi, tree_style=ts)
     tree.ladderize()
