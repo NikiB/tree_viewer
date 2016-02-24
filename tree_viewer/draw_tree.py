@@ -11,7 +11,7 @@ from cluster_nodes import size_clustering, color_clustering
 
 def node_check(name, t):
     nodes = t.search_nodes(name=name)
-    assert len(nodes) <= 1
+    assert len(nodes) >= 1
     if len(nodes) == 0:
         Warning("the input is 0!")
         return None
