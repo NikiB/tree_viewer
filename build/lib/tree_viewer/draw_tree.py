@@ -9,6 +9,16 @@ import sys
 from cluster_nodes import size_clustering, color_clustering
 
 
+def node_check(name, t):
+    nodes = t.search_nodes(name=name)
+    assert len(nodes) >= 1
+    if len(nodes) == 0:
+        Warning("the input is 0!")
+        return None
+    node = nodes[0]
+    return node
+
+
 def tree_draw(tree_file,
               tree_name=None,
               order_vector_file=None,
@@ -73,7 +83,6 @@ def tree_draw(tree_file,
 
     # leaf styles and update distance
     if not scale_rate:
-
         scale_rate = max(1000, round(1/max_dist))
     for n in t.traverse():
         if 'dist' in styles[n.name]:
@@ -141,9 +150,9 @@ def tree_draw(tree_file,
     if duplicate_file:
         dup_labels = utils.get_dup_labels(duplicate_file)
         for name, color in dup_labels.iteritems():
-            nodes = t.search_nodes(name=name)
-            assert len(nodes) == 1
-            node = nodes[0]
+            node = node_check(name, t)
+            if not node:
+                continue
             dup_face = ete2.faces.TextFace('*', fsize=10, fgcolor=color)
             dup_face.margin_left = 5
             node.add_face(dup_face, column=1)

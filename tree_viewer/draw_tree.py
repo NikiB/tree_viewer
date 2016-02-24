@@ -13,7 +13,7 @@ def node_check(name, t):
     nodes = t.search_nodes(name=name)
     assert len(nodes) >= 1
     if len(nodes) == 0:
-        Warning("the input is 0!")
+        Warning("The json file contains too many nodes")
         return None
     node = nodes[0]
     return node
@@ -35,7 +35,8 @@ def tree_draw(tree_file,
               font_size=7,
               font_legend=7,
               node_size=3,
-              scale_rate=None
+              scale_rate=None,
+              distance_factor=1
               ):
 
     t = ete2.Tree(newick=tree_file, format=1)
@@ -71,7 +72,9 @@ def tree_draw(tree_file,
                 for ancestor in n.get_ancestors():
                     father_path += styles[ancestor.name]['dist']
 
-                dist = math.log10(n.get_distance(root)+1)-father_path
+                dist = math.log10(n.get_distance(root)*distance_factor+1)-father_path
+                if dist < 0:
+                    dist = 0
                 styles[n.name]['dist'] = dist
                 max_dist = max(max_dist, dist)
 
@@ -208,6 +211,7 @@ def main():
     parser.add_argument('-fl', '--fontlegend', type=int, dest='font_legend', default=7, help='font size for the legend (default=7)')
     parser.add_argument('-ns', '--nodesize', type=int, dest='node_size', default=3, help='sizes of the leaves (default=3)')
     parser.add_argument('-sr', '--scalerate', type=int, dest='scale_rate', default=None, help='the Y-scale rate (default=None)')
+    parser.add_argument('-df', '--distancefactor', type=int, dest='distance_factor', default=None, help='the distance factor for small distances(default=1)')
 
 
     # tree_file = '/net/mraid11/export/data/dcsoft/home/LINEAGE/Hiseq/NSR5/fastq/Calling/Tree_Analysis/Ruby/NSR5_AC_X_mat_1a__0_01__30Ruby_transposed_NewNames_filtered_0_0_withRoot_distance_ABS_NJ_reordered_leafTab_fillNAN_1_distance_ABS_NJ_reordered.newick'
@@ -243,6 +247,7 @@ def main():
     tree_rotation = args.tree_rotation
     node_size = args.node_size
     scale_rate = args.scale_rate
+    distance_factor = args.distance_factor
     # launch server X
     reload(sys)
     sys.setdefaultencoding("utf-8")
@@ -263,7 +268,8 @@ def main():
                          font_size=font_size,
                          font_legend=font_legend,
                          node_size=node_size,
-                         scale_rate=scale_rate
+                         scale_rate=scale_rate,
+                         distance_factor=distance_factor
                          )
 
     tree.render(output_file, h=fig_height, w=fig_width, dpi=fig_dpi, tree_style=ts)
