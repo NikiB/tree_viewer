@@ -7,5 +7,6 @@ DrawTreesETE.egg-info/entry_points.txt
 DrawTreesETE.egg-info/requires.txt
 DrawTreesETE.egg-info/top_level.txt
 tree_viewer/__init__.py
+tree_viewer/cluster_nodes.py
 tree_viewer/draw_tree.py
 tree_viewer/utils.py
