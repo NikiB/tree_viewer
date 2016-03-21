@@ -36,7 +36,8 @@ def tree_draw(tree_file,
               font_legend=7,
               node_size=3,
               scale_rate=None,
-              distance_factor=1
+              distance_factor=1,
+              y_scale=False
               ):
 
     t = ete2.Tree(newick=tree_file, format=1)
@@ -62,9 +63,13 @@ def tree_draw(tree_file,
     # calculate the scale for the tree (log, linear and right size)
     if tree_scale == 'log':
         max_dist = 0
+    root = t.get_tree_root()
+    last_leaf = root.get_farthest_leaf()
+    ts.y_axis['scale_min_value'] = root.dist
+    ts.y_axis['scale_max_value'] = last_leaf.dist
+
     for n in t.traverse():
         if tree_scale == 'log':
-            root = t.get_tree_root()
             if n == root:
                 styles[n.name]['dist'] = 0
             else:
@@ -170,6 +175,12 @@ def tree_draw(tree_file,
             ts.legend.add_face(legend_txt, column=1)
         ts.legend_position = 4
 
+    # add y-scale to the picture
+    if y_scale:
+
+        ts.y_axis['scale_type'] = tree_scale
+        ts.y_axis['scale_length'] = last_leaf.dist - root.dist
+
     # set all the styles
     for n in t.traverse():
         if n.name == 'IDroot':
@@ -184,8 +195,17 @@ def tree_draw(tree_file,
     root.border.color = 'black'
     t.add_face(root, column=0, position='float')
 
-    #t.render("%%inline", tree_style=ts)
+    # t.render("%%inline", tree_style=ts)
     return t, ts
+
+
+def str2bool(v):
+    """
+    susendberg's function
+    :param v:
+    :return:
+    """
+    return v.lower() in ("yes", "true", "t", "1")
 
 
 def main():
@@ -203,15 +223,17 @@ def main():
     parser.add_argument('-D', '--legendFile', type=str, dest='legend_file', default=None, help='path for legend file for the tree')
     parser.add_argument('-d', '--duplicateFile', type=str, dest='duplicate_file', default=None, help='path for duplicates file for the tree')
     parser.add_argument('-S', '--scale', type=str, dest='tree_scale', default='linear', help='choose the scale for the tree linear/log (default=linear)')
-    parser.add_argument('-w', '--width', type=int, dest='fig_width', default=None, help='width for the saved figure (default=None)')
-    parser.add_argument('-he', '--height', type=int, dest='fig_height', default=None, help='height for the saved figure (default=None)')
-    parser.add_argument('-dp', '--dpi', type=int, dest='fig_dpi', default=900, help='DPI resolution for the figure (default=900)')
-    parser.add_argument('-r', '--rotation', type=bool, dest='tree_rotation', default=True, help='rotation of the figure (default=True)')
+    parser.add_argument('-w', '--width', type=int, dest='fig_width', default=None, help='width for the saved figure in millimeters (default=None)')
+    parser.add_argument('-he', '--height', type=int, dest='fig_height', default=None, help='height for the saved figure in millimeters (default=None)')
+    parser.add_argument('-dp', '--dpi', type=int, dest='fig_dpi', default=200, help='DPI resolution for the figure (default=200)')
+    parser.add_argument('-r', '--rotation', type=str2bool, dest='tree_rotation', default=True, help='rotation of the figure (default=True)')
     parser.add_argument('-f', '--fontsize', type=int, dest='font_size', default=7, help='font size for the labels (default=7)')
     parser.add_argument('-fl', '--fontlegend', type=int, dest='font_legend', default=7, help='font size for the legend (default=7)')
     parser.add_argument('-ns', '--nodesize', type=int, dest='node_size', default=3, help='sizes of the leaves (default=3)')
     parser.add_argument('-sr', '--scalerate', type=int, dest='scale_rate', default=None, help='the Y-scale rate (default=None)')
     parser.add_argument('-df', '--distancefactor', type=int, dest='distance_factor', default=None, help='the distance factor for small distances(default=1)')
+    parser.add_argument('-y', '--yscale', type=str2bool, dest='y_scale', default=False, help='Y ladder for the tree(default=False)')
+
 
 
     # tree_file = '/net/mraid11/export/data/dcsoft/home/LINEAGE/Hiseq/NSR5/fastq/Calling/Tree_Analysis/Ruby/NSR5_AC_X_mat_1a__0_01__30Ruby_transposed_NewNames_filtered_0_0_withRoot_distance_ABS_NJ_reordered_leafTab_fillNAN_1_distance_ABS_NJ_reordered.newick'
@@ -248,6 +270,7 @@ def main():
     node_size = args.node_size
     scale_rate = args.scale_rate
     distance_factor = args.distance_factor
+    y_scale = args.y_scale
     # launch server X
     reload(sys)
     sys.setdefaultencoding("utf-8")
@@ -269,14 +292,15 @@ def main():
                          font_legend=font_legend,
                          node_size=node_size,
                          scale_rate=scale_rate,
-                         distance_factor=distance_factor
+                         distance_factor=distance_factor,
+                         y_scale=y_scale
                          )
 
-    tree.render(output_file, h=fig_height, w=fig_width, dpi=fig_dpi, tree_style=ts)
+    tree.render(output_file, units='mm', h=fig_height, w=fig_width, dpi=fig_dpi, tree_style=ts)
     tree.ladderize()
     output_file = output_file.split('.')
     output_file = output_file[0] + '_ladderize.' + output_file[1]
-    tree.render(output_file, h=fig_height, w=fig_width, dpi=fig_dpi, tree_style=ts)
+    tree.render(output_file, units='mm', h=fig_height, w=fig_width, dpi=fig_dpi, tree_style=ts)
     #tree.show(tree_style=ts)
     print 'Thank You'
 

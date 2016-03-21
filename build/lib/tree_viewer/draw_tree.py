@@ -13,7 +13,7 @@ def node_check(name, t):
     nodes = t.search_nodes(name=name)
     assert len(nodes) >= 1
     if len(nodes) == 0:
-        Warning("the input is 0!")
+        Warning("The json file contains too many nodes")
         return None
     node = nodes[0]
     return node
@@ -35,7 +35,9 @@ def tree_draw(tree_file,
               font_size=7,
               font_legend=7,
               node_size=3,
-              scale_rate=None
+              scale_rate=None,
+              distance_factor=1,
+              y_scale=False
               ):
 
     t = ete2.Tree(newick=tree_file, format=1)
@@ -61,9 +63,9 @@ def tree_draw(tree_file,
     # calculate the scale for the tree (log, linear and right size)
     if tree_scale == 'log':
         max_dist = 0
+    root = t.get_tree_root()
     for n in t.traverse():
         if tree_scale == 'log':
-            root = t.get_tree_root()
             if n == root:
                 styles[n.name]['dist'] = 0
             else:
@@ -71,7 +73,9 @@ def tree_draw(tree_file,
                 for ancestor in n.get_ancestors():
                     father_path += styles[ancestor.name]['dist']
 
-                dist = math.log10(n.get_distance(root)+1)-father_path
+                dist = math.log10(n.get_distance(root)*distance_factor+1)-father_path
+                if dist < 0:
+                    dist = 0
                 styles[n.name]['dist'] = dist
                 max_dist = max(max_dist, dist)
 
@@ -167,6 +171,24 @@ def tree_draw(tree_file,
             ts.legend.add_face(legend_txt, column=1)
         ts.legend_position = 4
 
+    # add y-scale to the picture
+    if y_scale:
+        min_data = root.dist
+        min_scale = styles[root.name]['dist']
+        farthest_leaf = root.get_farthest_leaf()[0]
+        max_data = farthest_leaf.dist
+        max_scale = styles[farthest_leaf.name]['dist']
+        scale_face = ete2.faces.RectFace(height=10,
+                                         width=(max_scale-min_scale)*scale_rate,
+                                         fgcolor='black',
+                                         bgcolor='black')
+
+        t1 = ete2.faces.TextFace("Header Face", fsize=12, fgcolor="#aa0000")
+        ts.aligned_header.add_face(t1, column=0)
+        # ts.aligned_foot.add_face(scale_face, column=0)
+        t1.hz_align = 0
+
+
     # set all the styles
     for n in t.traverse():
         if n.name == 'IDroot':
@@ -200,14 +222,17 @@ def main():
     parser.add_argument('-D', '--legendFile', type=str, dest='legend_file', default=None, help='path for legend file for the tree')
     parser.add_argument('-d', '--duplicateFile', type=str, dest='duplicate_file', default=None, help='path for duplicates file for the tree')
     parser.add_argument('-S', '--scale', type=str, dest='tree_scale', default='linear', help='choose the scale for the tree linear/log (default=linear)')
-    parser.add_argument('-w', '--width', type=int, dest='fig_width', default=None, help='width for the saved figure (default=None)')
-    parser.add_argument('-he', '--height', type=int, dest='fig_height', default=None, help='height for the saved figure (default=None)')
-    parser.add_argument('-dp', '--dpi', type=int, dest='fig_dpi', default=900, help='DPI resolution for the figure (default=900)')
+    parser.add_argument('-w', '--width', type=int, dest='fig_width', default=None, help='width for the saved figure in millimeters (default=None)')
+    parser.add_argument('-he', '--height', type=int, dest='fig_height', default=None, help='height for the saved figure in millimeters (default=None)')
+    parser.add_argument('-dp', '--dpi', type=int, dest='fig_dpi', default=200, help='DPI resolution for the figure (default=200)')
     parser.add_argument('-r', '--rotation', type=bool, dest='tree_rotation', default=True, help='rotation of the figure (default=True)')
     parser.add_argument('-f', '--fontsize', type=int, dest='font_size', default=7, help='font size for the labels (default=7)')
     parser.add_argument('-fl', '--fontlegend', type=int, dest='font_legend', default=7, help='font size for the legend (default=7)')
     parser.add_argument('-ns', '--nodesize', type=int, dest='node_size', default=3, help='sizes of the leaves (default=3)')
     parser.add_argument('-sr', '--scalerate', type=int, dest='scale_rate', default=None, help='the Y-scale rate (default=None)')
+    parser.add_argument('-df', '--distancefactor', type=int, dest='distance_factor', default=None, help='the distance factor for small distances(default=1)')
+    parser.add_argument('-y', '--yscale', type=bool, dest='y_scale', default=False, help='Y ladder for the tree(default=False)')
+
 
 
     # tree_file = '/net/mraid11/export/data/dcsoft/home/LINEAGE/Hiseq/NSR5/fastq/Calling/Tree_Analysis/Ruby/NSR5_AC_X_mat_1a__0_01__30Ruby_transposed_NewNames_filtered_0_0_withRoot_distance_ABS_NJ_reordered_leafTab_fillNAN_1_distance_ABS_NJ_reordered.newick'
@@ -243,6 +268,8 @@ def main():
     tree_rotation = args.tree_rotation
     node_size = args.node_size
     scale_rate = args.scale_rate
+    distance_factor = args.distance_factor
+    y_scale = args.y_scale
     # launch server X
     reload(sys)
     sys.setdefaultencoding("utf-8")
@@ -263,14 +290,16 @@ def main():
                          font_size=font_size,
                          font_legend=font_legend,
                          node_size=node_size,
-                         scale_rate=scale_rate
+                         scale_rate=scale_rate,
+                         distance_factor=distance_factor,
+                         y_scale=y_scale
                          )
 
-    tree.render(output_file, h=fig_height, w=fig_width, dpi=fig_dpi, tree_style=ts)
+    tree.render(output_file, units='mm', h=fig_height, w=fig_width, dpi=fig_dpi, tree_style=ts)
     tree.ladderize()
     output_file = output_file.split('.')
     output_file = output_file[0] + '_ladderize.' + output_file[1]
-    tree.render(output_file, h=fig_height, w=fig_width, dpi=fig_dpi, tree_style=ts)
+    tree.render(output_file, units='mm', h=fig_height, w=fig_width, dpi=fig_dpi, tree_style=ts)
     #tree.show(tree_style=ts)
     print 'Thank You'
 

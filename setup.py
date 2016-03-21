@@ -12,7 +12,10 @@ setup(
     description='Useful towel-related stuff.',
     #long_description=open('README.txt').read(),
     install_requires=[
-        "ete2 >= 2.2",
+        "ete2 == 2.3.10.1",
+    ],
+    dependency_links=[
+        "git+https://github.com/NikiB/ete.git@476722ec18338eb46037b06334e3b16c81bface2#egg=ete2-2.3.10.1",
     ],
     entry_points={
         'console_scripts': [
