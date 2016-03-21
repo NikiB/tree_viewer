@@ -1,18 +1,18 @@
 __author__ = 'veronika'
 
-import ete2
+import ete3
 import math
-import utils
+from . import utils
 
 
 def size_clustering(t, styles, clustering_sizes_file):
     # add width to branches
     branch_width = utils.get_branch_width(clustering_sizes_file)
-    for name, groups in branch_width.iteritems():
+    for name, groups in branch_width.items():
         nodes = t.search_nodes(name=name)
         assert len(nodes) == 1
         node = nodes[0]
-        for group, pvalue in groups.iteritems():
+        for group, pvalue in groups.items():
             width = min(10, -round(math.log10(pvalue)))
             children = node.get_children()
             for child in children:
@@ -29,11 +29,11 @@ def size_clustering(t, styles, clustering_sizes_file):
 def color_clustering(t, ts, styles, clustering_colors_file):
     # add colors to branches
     cluster_colors = utils.get_cluster_colors(clustering_colors_file)
-    for name, groups in cluster_colors.iteritems():
+    for name, groups in cluster_colors.items():
         nodes = t.search_nodes(name=name)
         assert len(nodes) == 1
         node = nodes[0]
-        for group, color in groups.iteritems():
+        for group, color in groups.items():
             children = node.get_children()
             for child in children:
                 if group not in styles[child.name]:
@@ -47,7 +47,7 @@ def color_clustering(t, ts, styles, clustering_colors_file):
                 if 'vt_line_width' in styles[node.name][group]:
                     line_width = line_width + styles[node.name][group]["vt_line_width"]
 
-                rf = ete2.faces.RectFace(height=styles[child.name][group]["hz_line_width"],
+                rf = ete3.faces.RectFace(height=styles[child.name][group]["hz_line_width"],
                                          width=line_width,
                                          fgcolor=color,
                                          bgcolor=color)

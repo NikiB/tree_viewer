@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='DrawTreesETE',
-    version='0.1.13',
+    version='0.1.14',
     author='Veronika Berman',
     author_email='nika.berman@gmail.com',
     packages = find_packages(),  # include all packages under src
@@ -12,7 +12,8 @@ setup(
     description='Useful towel-related stuff.',
     #long_description=open('README.txt').read(),
     install_requires=[
-        "ete2 >= 2.2",
+        "ete3 >= 3.0.0b",
+	"six",  # FIXME: This is a requirement by ete3...
     ],
     entry_points={
         'console_scripts': [

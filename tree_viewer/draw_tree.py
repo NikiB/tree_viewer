@@ -1,12 +1,12 @@
 __author__ = 'veronika'
 
 import argparse
-import ete2
+import ete3
 import math
-import utils
+from . import utils
 import os
 import sys
-from cluster_nodes import size_clustering, color_clustering
+from .cluster_nodes import size_clustering, color_clustering
 
 
 def node_check(name, t):
@@ -39,15 +39,15 @@ def tree_draw(tree_file,
               distance_factor=1
               ):
 
-    t = ete2.Tree(newick=tree_file, format=1)
-    ts = ete2.TreeStyle()
+    t = ete3.Tree(newick=tree_file, format=1)
+    ts = ete3.TreeStyle()
     if tree_rotation:
         ts.rotation = 90
     ts.show_leaf_name = True
     ts.show_scale = False
     ts.scale = 1
     if tree_name:
-        ts.title.add_face(ete2.TextFace(tree_name, fsize=20), column=0)
+        ts.title.add_face(ete3.TextFace(tree_name, fsize=20), column=0)
 
     styles = {}
     max_dist = 0
@@ -55,7 +55,7 @@ def tree_draw(tree_file,
     # initialize all nodes and branches
     for n in t.traverse():
         styles[n.name] = dict()
-        styles[n.name]['style'] = ete2.NodeStyle()
+        styles[n.name]['style'] = ete3.NodeStyle()
         styles[n.name]['style']['fgcolor'] = 'black'
         max_dist = max(max_dist, n.dist)
 
@@ -98,14 +98,14 @@ def tree_draw(tree_file,
     # add bootstrap values to the branches (size of the node)
     if intermediate_node_sizes_file:
         bootsrtap_sizes = utils.get_bootsrtap_size(intermediate_node_sizes_file)
-        for branch, size in bootsrtap_sizes.iteritems():
+        for branch, size in bootsrtap_sizes.items():
             styles[branch]['style']["size"] = size
             styles[branch]['style']['fgcolor'] = 'black'
 
     # add colors to the leafs
     if cell_colors_file:
         cells_colors = utils.get_cells_colors(cell_colors_file)
-        for name, color in cells_colors.iteritems():
+        for name, color in cells_colors.items():
             styles[name]['style']['fgcolor'] = color
 
     # reorder the tree by pre-proses if possible
@@ -137,14 +137,14 @@ def tree_draw(tree_file,
     if leaf_labels_file:
         cells_labels = utils.get_cells_labels(leaf_labels_file)
         ts.show_leaf_name = False
-        for name, label in cells_labels.iteritems():
+        for name, label in cells_labels.items():
             nodes = t.search_nodes(name=name)
             assert len(nodes) == 1
             node = nodes[0]
             if name in cells_colors:
-                name_face = ete2.faces.TextFace(cells_labels[name], fsize=font_size, fgcolor=cells_colors[name])
+                name_face = ete3.faces.TextFace(cells_labels[name], fsize=font_size, fgcolor=cells_colors[name])
             else:
-                name_face = ete2.faces.TextFace(cells_labels[name], fsize=font_size)
+                name_face = ete3.faces.TextFace(cells_labels[name], fsize=font_size)
 
             name_face.margin_left = 3
             node.add_face(name_face, column=0)
@@ -152,20 +152,20 @@ def tree_draw(tree_file,
     # add duplicate tags to nodes
     if duplicate_file:
         dup_labels = utils.get_dup_labels(duplicate_file)
-        for name, color in dup_labels.iteritems():
+        for name, color in dup_labels.items():
             node = node_check(name, t)
             if not node:
                 continue
-            dup_face = ete2.faces.TextFace('*', fsize=10, fgcolor=color)
+            dup_face = ete3.faces.TextFace('*', fsize=10, fgcolor=color)
             dup_face.margin_left = 5
             node.add_face(dup_face, column=1)
 
     # add legend to the tree
     if legend_file:
         legend = utils.get_legend(legend_file)
-        for mark in legend.keys():
-            ts.legend.add_face(ete2.faces.CircleFace(2, legend[mark]), column=0)
-            legend_txt = ete2.faces.TextFace(mark, fsize=font_legend)
+        for mark in list(legend.keys()):
+            ts.legend.add_face(ete3.faces.CircleFace(2, legend[mark]), column=0)
+            legend_txt = ete3.faces.TextFace(mark, fsize=font_legend)
             legend_txt.margin_left = 5
             ts.legend.add_face(legend_txt, column=1)
         ts.legend_position = 4
@@ -179,7 +179,7 @@ def tree_draw(tree_file,
             n.dist = 0
             n.delete()
         n.set_style(styles[n.name]['style'])
-    root = ete2.faces.CircleFace(2, 'white')
+    root = ete3.faces.CircleFace(2, 'white')
     root.border.width = 1
     root.border.color = 'black'
     t.add_face(root, column=0, position='float')
@@ -249,8 +249,7 @@ def main():
     scale_rate = args.scale_rate
     distance_factor = args.distance_factor
     # launch server X
-    reload(sys)
-    sys.setdefaultencoding("utf-8")
+    # sys.setdefaultencoding("utf-8")
     os.environ["DISPLAY"] = ":2"
 
     tree, ts = tree_draw(tree_file, tree_name=tree_name,
@@ -278,7 +277,7 @@ def main():
     output_file = output_file[0] + '_ladderize.' + output_file[1]
     tree.render(output_file, h=fig_height, w=fig_width, dpi=fig_dpi, tree_style=ts)
     #tree.show(tree_style=ts)
-    print 'Thank You'
+    print('Thank You')
 
 if __name__ == "__main__":
     main()
