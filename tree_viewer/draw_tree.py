@@ -3,10 +3,10 @@ __author__ = 'veronika'
 import argparse
 import ete3
 import math
-from . import utils
+from tree_viewer import utils
 import os
 import sys
-from .cluster_nodes import size_clustering, color_clustering
+from tree_viewer.cluster_nodes import size_clustering, color_clustering
 
 
 def node_check(name, t):
@@ -36,7 +36,8 @@ def tree_draw(tree_file,
               font_legend=7,
               node_size=3,
               scale_rate=None,
-              distance_factor=1
+              distance_factor=1,
+              y_scale=True
               ):
 
     t = ete3.Tree(newick=tree_file, format=1)
@@ -57,6 +58,8 @@ def tree_draw(tree_file,
         styles[n.name] = dict()
         styles[n.name]['style'] = ete3.NodeStyle()
         styles[n.name]['style']['fgcolor'] = 'black'
+        styles[n.name]['style']["vt_line_width"] = 1
+        styles[n.name]['style']["hz_line_width"] = 1
         max_dist = max(max_dist, n.dist)
 
     # calculate the scale for the tree (log, linear and right size)
@@ -160,6 +163,10 @@ def tree_draw(tree_file,
             dup_face.margin_left = 5
             node.add_face(dup_face, column=1)
 
+    # add y_scale
+    if y_scale:
+        pass
+
     # add legend to the tree
     if legend_file:
         legend = utils.get_legend(legend_file)
@@ -211,6 +218,7 @@ def main():
     parser.add_argument('-fl', '--fontlegend', type=int, dest='font_legend', default=7, help='font size for the legend (default=7)')
     parser.add_argument('-ns', '--nodesize', type=int, dest='node_size', default=3, help='sizes of the leaves (default=3)')
     parser.add_argument('-sr', '--scalerate', type=int, dest='scale_rate', default=None, help='the Y-scale rate (default=None)')
+    parser.add_argument('-y', '--yscale', type=str, dest='y_scale', default=True, help='show the Y-scale (default=True)')
     parser.add_argument('-df', '--distancefactor', type=int, dest='distance_factor', default=None, help='the distance factor for small distances(default=1)')
 
 
@@ -247,6 +255,7 @@ def main():
     tree_rotation = args.tree_rotation
     node_size = args.node_size
     scale_rate = args.scale_rate
+    y_scale=args.y_scale
     distance_factor = args.distance_factor
     # launch server X
     # sys.setdefaultencoding("utf-8")
@@ -268,7 +277,8 @@ def main():
                          font_legend=font_legend,
                          node_size=node_size,
                          scale_rate=scale_rate,
-                         distance_factor=distance_factor
+                         distance_factor=distance_factor,
+                         y_scale=y_scale
                          )
 
     tree.render(output_file, h=fig_height, w=fig_width, dpi=fig_dpi, tree_style=ts)
