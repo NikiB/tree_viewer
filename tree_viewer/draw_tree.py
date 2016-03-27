@@ -65,9 +65,14 @@ def tree_draw(tree_file,
     # calculate the scale for the tree (log, linear and right size)
     if tree_scale == 'log':
         max_dist = 0
+
+    root = t.get_tree_root()
+    last_leaf = root.get_farthest_leaf()
+    ts.y_axis['scale_min_value'] = root.dist
+    ts.y_axis['scale_max_value'] = last_leaf.dist
+
     for n in t.traverse():
         if tree_scale == 'log':
-            root = t.get_tree_root()
             if n == root:
                 styles[n.name]['dist'] = 0
             else:
@@ -163,9 +168,11 @@ def tree_draw(tree_file,
             dup_face.margin_left = 5
             node.add_face(dup_face, column=1)
 
-    # add y_scale
+    # add y-scale to the picture
     if y_scale:
-        pass
+
+        ts.y_axis['scale_type'] = tree_scale
+        ts.y_axis['scale_length'] = last_leaf.dist - root.dist
 
     # add legend to the tree
     if legend_file:
@@ -218,7 +225,7 @@ def main():
     parser.add_argument('-fl', '--fontlegend', type=int, dest='font_legend', default=7, help='font size for the legend (default=7)')
     parser.add_argument('-ns', '--nodesize', type=int, dest='node_size', default=3, help='sizes of the leaves (default=3)')
     parser.add_argument('-sr', '--scalerate', type=int, dest='scale_rate', default=None, help='the Y-scale rate (default=None)')
-    parser.add_argument('-y', '--yscale', type=str, dest='y_scale', default=True, help='show the Y-scale (default=True)')
+    parser.add_argument('-y', '--yscale', type=str2bool, dest='y_scale', default=False, help='Y ladder for the tree(default=False)')
     parser.add_argument('-df', '--distancefactor', type=int, dest='distance_factor', default=None, help='the distance factor for small distances(default=1)')
 
 
