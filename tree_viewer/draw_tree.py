@@ -3,9 +3,11 @@ __author__ = 'veronika'
 import argparse
 import ete3
 import math
-from tree_viewer import utils
 import os
 import sys
+
+from pyvirtualdisplay import Display
+from tree_viewer import utils
 from tree_viewer.cluster_nodes import size_clustering, color_clustering
 
 
@@ -267,11 +269,19 @@ def main():
     tree_rotation = args.tree_rotation
     node_size = args.node_size
     scale_rate = args.scale_rate
-    y_scale=args.y_scale
+    y_scale = args.y_scale
     distance_factor = args.distance_factor
     # launch server X
     # sys.setdefaultencoding("utf-8")
-    os.environ["DISPLAY"] = ":2"
+
+    if 'DISPLAY' not in os.environ:
+        print("  Bringing up a new display, because os.environ does not have one.")
+        display = Display(visible=False, size=(1920, 1200))
+        display.start()
+        os.environ["DISPLAY"] = ":2"
+        print("  Started pyvirtualdisplay with backend '%s', screen '%s'." % (display.backend, display.screen))
+    else:
+        print("  Environ DISPLAY is '%s', no need to use pyvirtualdisplay." % os.environ['DISPLAY'])
 
     tree, ts = tree_draw(tree_file, tree_name=tree_name,
                          order_vector_file=order_vector_file,
